@@ -14,8 +14,8 @@ Currently supports **Debian**, **Arch**, and **Alpine**.
 `sudo` has grown over time into a large and complex utility.
 For users who prefer simplicity, minimalism, and better auditability,
 `doas` (originally from **OpenBSD**) is a lean and secure alternative.
-It does just one thing — lets authorized users run commands as another
-root — and it does it very well.
+It does just one thing — lets authorized users run commands as root
+— and it does it very well.
 
 ## Installation
 
