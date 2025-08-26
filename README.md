@@ -1,2 +1,10 @@
 # replace-sudo-with-doas
-Because sudo is bloat.
+
+## Overview
+
+## Why
+
+## Installation
+
+## Legal
+
