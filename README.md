@@ -19,9 +19,10 @@ root — and it does it very well.
 
 ## Installation
 
-You can install and run the script directly from GitHub:
+You can install and run the script (as root) directly from GitHub:
 
 ```sh
+
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/Kinderfeld/replace-sudo-with-doas/main/replace_sudo_with_doas.sh)"
 ```
 
@@ -34,6 +35,7 @@ This project is released into the public domain under **The Unlicense**.
 
 More information in:
 
-    - _LICENSE_;
+- _LICENSE_;
 
-    - _https://unlicense.org/_;
+- [_Unlicense Website_](https://unlicense.org/).
+
