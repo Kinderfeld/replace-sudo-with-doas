@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Copyright waiver for <https://github.com/Kinderfeld/replace-sudo-with-doas
+# Copyright waiver for <https://github.com/Kinderfeld/replace-sudo-with-doas>
 #
 # I dedicate any and all copyright interest in this software to the
 # public domain. I make this dedication for the benefit of the public at
@@ -17,6 +17,10 @@
 # organization, government, or other entity has any copyright interest
 # in my contributions, and I affirm that I will not make contributions
 # that are otherwise encumbered.
+
+# Disable unicode.
+LC_ALL="C"
+LANG="C"
 
 remove_sudo()
 {
@@ -47,21 +51,22 @@ configure_doas()
     printf "[<==] Configuring 'doas'...\n"
 
     config="permit persist setenv {PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin} :wheel" 
-    echo "${config}" > /etc/doas.conf
+    [ "$1" = "netbsd" ] && echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf
+    [ "$1" = "freebsd" ] && echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf
 
     ln -s $(which doas) /usr/bin/sudo
 }
 
 main()
 {
-    printf "[*] Starting 'sudo' replacement..\n"
+    printf "[*] Starting 'sudo' replacement...\n"
 
     printf "[==>] Enter your OS family [debian, arch, alpine, freebsd, openbsd, netbsd]: "
     read os
 
     remove_sudo "${os}"
     install_doas "${os}"
-    configure_doas
+    configure_doas "${os}"
 
     printf "[*] Success!\n"
 }
