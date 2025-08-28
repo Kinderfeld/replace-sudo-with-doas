@@ -26,6 +26,8 @@ remove_sudo()
     [ "$1" == "arch" ] && pacman -R sudo
     [ "$1" == "alpine" ] && apk del sudo
     [ "$1" == "freebsd" ] && pkg remove sudo
+    [ "$1" == "netbsd" ] && pkgin remove sudo
+    [ "$1" == "openbsd" ] && pkg_delete sudo
 }
 
 install_doas()
@@ -34,8 +36,10 @@ install_doas()
 
     [ "$1" == "debian" ] && apt install doas
     [ "$1" == "arch" ] && pacman -S doas
-    [ "$1" == "alpine"] && apk add doas
+    [ "$1" == "alpine" ] && apk add doas
     [ "$1" == "freebsd" ] && pkg install doas
+    [ "$1" == "netbsd" ] && pkgin install doas
+    [ "$1" == "openbsd"] && pkg_add doas
 }
 
 configure_doas()
@@ -52,7 +56,7 @@ main()
 {
     printf "[*] Starting 'sudo' replacement..\n"
 
-    printf "[==>] Enter your OS family [debian, arch, alpine, freebsd]: "
+    printf "[==>] Enter your OS family [debian, arch, alpine, freebsd, openbsd, netbsd]: "
     read os
 
     remove_sudo "${os}"

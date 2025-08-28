@@ -7,7 +7,8 @@ more lightweight `doas`. It automates the process of removing `sudo`,
 installing `doas`, configuring it for persistent use, and symlinking
 doas to `/usr/bin/sudo` for compatibility.
 
-Currently supports **Debian**, **Arch**, **Alpine**, and **FreeBSD**.
+Currently supports **Debian**, **Arch**, **Alpine**, **FreeBSD**, **OpenBSD**
+and **NetBSD**.
 
 ## Why
 
