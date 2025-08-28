@@ -22,24 +22,24 @@ remove_sudo()
 {
     printf "[<==] Removing 'sudo'...\n"
 
-    [ "$1" == "debian" ] && apt remove sudo
-    [ "$1" == "arch" ] && pacman -R sudo
-    [ "$1" == "alpine" ] && apk del sudo
-    [ "$1" == "freebsd" ] && pkg remove sudo
-    [ "$1" == "netbsd" ] && pkgin remove sudo
-    [ "$1" == "openbsd" ] && pkg_delete sudo
+    [ "$1" = "debian" ] && apt remove sudo
+    [ "$1" = "arch" ] && pacman -R sudo
+    [ "$1" = "alpine" ] && apk del sudo
+    [ "$1" = "freebsd" ] && pkg remove sudo
+    [ "$1" = "netbsd" ] && pkgin remove sudo
+    [ "$1" = "openbsd" ] && pkg_delete sudo
 }
 
 install_doas()
 {
     printf "[<==] Installing 'doas'...\n"
 
-    [ "$1" == "debian" ] && apt install doas
-    [ "$1" == "arch" ] && pacman -S doas
-    [ "$1" == "alpine" ] && apk add doas
-    [ "$1" == "freebsd" ] && pkg install doas
-    [ "$1" == "netbsd" ] && pkgin install doas
-    [ "$1" == "openbsd"] && pkg_add doas
+    [ "$1" = "debian" ] && apt install doas
+    [ "$1" = "arch" ] && pacman -S doas
+    [ "$1" = "alpine" ] && apk add doas
+    [ "$1" = "freebsd" ] && pkg install doas
+    [ "$1" = "netbsd" ] && pkgin install doas
+    [ "$1" = "openbsd" ] && pkg_add doas
 }
 
 configure_doas()
