@@ -34,26 +34,31 @@ remove_sudo()
 {
     printf "[<==] Removing 'sudo'...\n"
 
-    [ "$1" = "debian" ] && apt remove sudo
-    [ "$1" = "arch" ] && pacman -R sudo
-    [ "$1" = "alpine" ] && apk del sudo
-    [ "$1" = "freebsd" ] && pkg remove sudo
-    [ "$1" = "netbsd" ] && pkgin remove sudo
-    [ "$1" = "openbsd" ] && pkg_delete sudo
-    [ "$1" = "void" ] && sudo_to_ignore && xbps-remove sudo
+    case "$1" in
+        debian) apt remove sudo ;;
+        arch) pacman -R sudo ;;
+        alpine) apk del sudo ;;
+        freebsd) pkg remove sudo ;;
+        netbsd) pkgin remove sudo ;;
+        openbsd) pkg_delete sudo ;;
+        void) sudo_to_ignore && xbps-remove sudo ;;
+        *) echo "Unsupported OS: $1" >&2; exit 1 ;;
+    esac
 }
 
 install_doas()
 {
     printf "[<==] Installing 'doas'...\n"
 
-    [ "$1" = "debian" ] && apt install doas
-    [ "$1" = "arch" ] && pacman -S doas
-    [ "$1" = "alpine" ] && apk add doas
-    [ "$1" = "freebsd" ] && pkg install doas
-    [ "$1" = "netbsd" ] && pkgin install doas
-    [ "$1" = "openbsd" ] && pkg_add doas
-    [ "$1" = "void" ] && xbps-install -S doas
+    case "$1" in
+        debian) apt install doas ;;
+        arch) pacman -S doas ;;
+        alpine) apk add doas ;;
+        freebsd) pkg install doas ;;
+        netbsd) pkgin install doas ;;
+        openbsd) pkg_add doas ;;
+        void) xbps-install -S opendoas ;;
+    esac
 }
 
 configure_doas()
@@ -61,9 +66,11 @@ configure_doas()
     printf "[<==] Configuring 'doas'...\n"
 
     config="permit persist setenv {PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin} :wheel" 
-    [ "$1" = "netbsd" ] && echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf
-    [ "$1" = "freebsd" ] && echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf
 
+    case "$1" in
+        netbsd) echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
+        freebsd) echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
+    esac
     ln -s $(which doas) /usr/bin/sudo
 }
 
