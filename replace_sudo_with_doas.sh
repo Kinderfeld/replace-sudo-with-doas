@@ -22,6 +22,14 @@
 LC_ALL="C"
 LANG="C"
 
+sudo_to_ignore()
+{
+    mkdir -p /etc/xbps.d
+    if [ ! -e /etc/xbps.d/ignore.conf ] || ! grep -q '^ignorepkg=sudo' /etc/xbps.d/ignore.conf; then
+        echo 'ignorepkg=sudo' >> /etc/xbps.d/ignore.conf
+    fi
+}
+
 remove_sudo()
 {
     printf "[<==] Removing 'sudo'...\n"
@@ -32,6 +40,7 @@ remove_sudo()
     [ "$1" = "freebsd" ] && pkg remove sudo
     [ "$1" = "netbsd" ] && pkgin remove sudo
     [ "$1" = "openbsd" ] && pkg_delete sudo
+    [ "$1" = "void" ] && sudo_to_ignore && xbps-remove sudo
 }
 
 install_doas()
@@ -44,6 +53,7 @@ install_doas()
     [ "$1" = "freebsd" ] && pkg install doas
     [ "$1" = "netbsd" ] && pkgin install doas
     [ "$1" = "openbsd" ] && pkg_add doas
+    [ "$1" = "void" ] && xbps-install -S doas
 }
 
 configure_doas()
@@ -61,7 +71,7 @@ main()
 {
     printf "[*] Starting 'sudo' replacement...\n"
 
-    printf "[==>] Enter your OS family [debian, arch, alpine, freebsd, openbsd, netbsd]: "
+    printf "[==>] Enter your OS family [debian, arch, alpine, freebsd, openbsd, netbsd, void]: "
     read os
 
     remove_sudo "${os}"
