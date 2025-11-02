@@ -24,6 +24,8 @@ LANG="C"
 
 sudo_to_ignore()
 {
+    printf "[<==] Adding 'sudo' to ignored packages...\n"
+
     mkdir -p /etc/xbps.d
     if [ ! -e /etc/xbps.d/ignore.conf ] || ! grep -q '^ignorepkg=sudo' /etc/xbps.d/ignore.conf; then
         echo 'ignorepkg=sudo' >> /etc/xbps.d/ignore.conf
@@ -35,14 +37,14 @@ remove_sudo()
     printf "[<==] Removing 'sudo'...\n"
 
     case "$1" in
-        debian) apt remove sudo ;;
-        arch) pacman -R sudo ;;
-        alpine) apk del sudo ;;
+        alpine)  apk del sudo ;;
+        arch)    pacman -R sudo ;;
+        debian)  apt remove sudo ;;
         freebsd) pkg remove sudo ;;
-        netbsd) pkgin remove sudo ;;
+        netbsd)  pkgin remove sudo ;;
         openbsd) pkg_delete sudo ;;
-        void) sudo_to_ignore && xbps-remove sudo ;;
-        *) echo "Unsupported OS: $1" >&2; exit 1 ;;
+        void)    sudo_to_ignore && xbps-remove sudo ;;
+        *)       echo "Unsupported OS: $1" >&2; exit 1 ;;
     esac
 }
 
@@ -51,13 +53,13 @@ install_doas()
     printf "[<==] Installing 'doas'...\n"
 
     case "$1" in
-        debian) apt install doas ;;
-        arch) pacman -S doas ;;
-        alpine) apk add doas ;;
+        alpine)  apk add doas ;;
+        arch)    pacman -S doas ;;
+        debian)  apt install doas ;;
         freebsd) pkg install doas ;;
-        netbsd) pkgin install doas ;;
+        netbsd)  pkgin install doas ;;
         openbsd) pkg_add doas ;;
-        void) xbps-install -S opendoas ;;
+        void)    xbps-install -S opendoas ;;
     esac
 }
 
@@ -65,11 +67,12 @@ configure_doas()
 {
     printf "[<==] Configuring 'doas'...\n"
 
-    config="permit persist setenv {PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin} :wheel" 
+    config="permit persist setenv {PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin} :wheel"
 
     case "$1" in
-        netbsd) echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
         freebsd) echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
+        netbsd)  echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
+        void)    echo "${config}" > /etc/doas.conf ;;
     esac
     ln -s $(which doas) /usr/bin/sudo
 }
