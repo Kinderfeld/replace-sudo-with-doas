@@ -22,38 +22,58 @@
 LC_ALL="C"
 LANG="C"
 
+sudo_to_ignore()
+{
+    printf "[<==] Adding 'sudo' to ignored packages...\n"
+
+    mkdir -p /etc/xbps.d
+    if [ ! -e /etc/xbps.d/ignore.conf ] || ! grep -q '^ignorepkg=sudo' /etc/xbps.d/ignore.conf; then
+        echo 'ignorepkg=sudo' >> /etc/xbps.d/ignore.conf
+    fi
+}
+
 remove_sudo()
 {
     printf "[<==] Removing 'sudo'...\n"
 
-    [ "$1" = "debian" ] && apt remove sudo
-    [ "$1" = "arch" ] && pacman -R sudo
-    [ "$1" = "alpine" ] && apk del sudo
-    [ "$1" = "freebsd" ] && pkg remove sudo
-    [ "$1" = "netbsd" ] && pkgin remove sudo
-    [ "$1" = "openbsd" ] && pkg_delete sudo
+    case "$1" in
+        alpine)  apk del sudo ;;
+        arch)    pacman -R sudo ;;
+        debian)  apt remove sudo ;;
+        freebsd) pkg remove sudo ;;
+        netbsd)  pkgin remove sudo ;;
+        openbsd) pkg_delete sudo ;;
+        void)    sudo_to_ignore && xbps-remove sudo ;;
+        *)       echo "Unsupported OS: $1" >&2; exit 1 ;;
+    esac
 }
 
 install_doas()
 {
     printf "[<==] Installing 'doas'...\n"
 
-    [ "$1" = "debian" ] && apt install doas
-    [ "$1" = "arch" ] && pacman -S doas
-    [ "$1" = "alpine" ] && apk add doas
-    [ "$1" = "freebsd" ] && pkg install doas
-    [ "$1" = "netbsd" ] && pkgin install doas
-    [ "$1" = "openbsd" ] && pkg_add doas
+    case "$1" in
+        alpine)  apk add doas ;;
+        arch)    pacman -S doas ;;
+        debian)  apt install doas ;;
+        freebsd) pkg install doas ;;
+        netbsd)  pkgin install doas ;;
+        openbsd) pkg_add doas ;;
+        void)    xbps-install -S opendoas ;;
+    esac
 }
 
 configure_doas()
 {
     printf "[<==] Configuring 'doas'...\n"
 
-    config="permit persist setenv {PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin} :wheel" 
-    [ "$1" = "netbsd" ] && echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf
-    [ "$1" = "freebsd" ] && echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf
+    config="permit persist setenv {PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin} :wheel"
 
+    case "$1" in
+        freebsd) echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
+        netbsd)  echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
+        void)    echo "${config}" > /etc/doas.conf ;;
+    esac
     ln -s $(which doas) /usr/bin/sudo
 }
 
@@ -61,7 +81,7 @@ main()
 {
     printf "[*] Starting 'sudo' replacement...\n"
 
-    printf "[==>] Enter your OS family [debian, arch, alpine, freebsd, openbsd, netbsd]: "
+    printf "[==>] Enter your OS family [debian, arch, alpine, freebsd, openbsd, netbsd, void]: "
     read os
 
     remove_sudo "${os}"
@@ -71,5 +91,14 @@ main()
     printf "[*] Success!\n"
 }
 
+root_check()
+{
+    if [ "$(id -u)" != "0" ]; then
+        echo "This script must be run with root privileges" >&2
+        exit 1
+    fi
+}
+
+root_check
 main
 
