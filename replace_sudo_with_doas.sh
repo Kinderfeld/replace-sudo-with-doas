@@ -28,7 +28,7 @@ sudo_to_ignore()
 
     mkdir -p /etc/xbps.d
     if [ ! -e /etc/xbps.d/ignore.conf ] || ! grep -q '^ignorepkg=sudo' /etc/xbps.d/ignore.conf; then
-        echo 'ignorepkg=sudo' >> /etc/xbps.d/ignore.conf
+        echo "ignorepkg=sudo" >> /etc/xbps.d/ignore.conf
     fi
 }
 
@@ -44,7 +44,7 @@ remove_sudo()
         netbsd)  pkgin remove sudo ;;
         openbsd) pkg_delete sudo ;;
         void)    sudo_to_ignore && xbps-remove sudo ;;
-        *)       echo "Unsupported OS: $1" >&2; exit 1 ;;
+        *)       printf "[!] Unsupported OS: '$1'\n"; exit 1 ;;
     esac
 }
 
@@ -72,9 +72,17 @@ configure_doas()
     case "$1" in
         freebsd) echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
         netbsd)  echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
-        void)    echo "${config}" > /etc/doas.conf ;;
     esac
+
     ln -s $(which doas) /usr/bin/sudo
+}
+
+root_check()
+{
+    [ "$(id -u)" != "0" ] && {
+        printf "[!] This script must be run with root privileges.\n"
+        exit 1
+    }
 }
 
 main()
@@ -89,14 +97,6 @@ main()
     configure_doas "${os}"
 
     printf "[*] Success!\n"
-}
-
-root_check()
-{
-    if [ "$(id -u)" != "0" ]; then
-        echo "This script must be run with root privileges" >&2
-        exit 1
-    fi
 }
 
 root_check
