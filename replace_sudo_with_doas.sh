@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 #
 # Copyright waiver for <https://github.com/Kinderfeld/replace-sudo-with-doas>
 #
