@@ -72,6 +72,7 @@ configure_doas()
     case "$1" in
         freebsd) echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
         netbsd)  echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
+        *)       echo "${config}" > /etc/doas.conf ;;
     esac
 
     ln -s "$(which doas)" /usr/bin/sudo
