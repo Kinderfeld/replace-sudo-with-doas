@@ -1,4 +1,4 @@
-# replace-sudo-with-doas
+# replace-sudo
 
 ## Overview
 
@@ -22,7 +22,7 @@ It does just one thing — lets authorized users run commands as root
 You can install and run the script (as root) directly from GitHub:
 
 ```sh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/Kinderfeld/replace-sudo-with-doas/main/replace_sudo_with_doas.sh)"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/Kinderfeld/replace-sudo/master/replace-sudo.sh)"
 ```
 
 Follow the prompt to specify your operating system,

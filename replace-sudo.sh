@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright waiver for <https://github.com/Kinderfeld/replace-sudo-with-doas>
+# Copyright waiver for <https://github.com/Kinderfeld/replace-sudo>
 #
 # I dedicate any and all copyright interest in this software to the
 # public domain. I make this dedication for the benefit of the public at
@@ -37,13 +37,13 @@ remove_sudo()
     printf "[<==] Removing 'sudo'...\n"
 
     case "$1" in
-        alpine)  apk del sudo ;;
-        arch)    pacman -R sudo ;;
-        debian)  apt remove sudo ;;
-        freebsd) pkg remove sudo ;;
-        netbsd)  pkgin remove sudo ;;
-        openbsd) pkg_delete sudo ;;
-        void)    sudo_to_ignore && xbps-remove sudo ;;
+        alpine)  apk del sudo                                     ;;
+        arch)    pacman -R sudo                                   ;;
+        debian)  apt remove sudo                                  ;;
+        freebsd) pkg remove sudo                                  ;;
+        netbsd)  pkgin remove sudo                                ;;
+        openbsd) pkg_delete sudo                                  ;;
+        void)    sudo_to_ignore && xbps-remove sudo               ;;
         *)       printf "[!] Unsupported OS: '%s'\n" "$1"; exit 1 ;;
     esac
 }
@@ -53,12 +53,12 @@ install_doas()
     printf "[<==] Installing 'doas'...\n"
 
     case "$1" in
-        alpine)  apk add doas ;;
-        arch)    pacman -S doas ;;
-        debian)  apt install doas ;;
-        freebsd) pkg install doas ;;
-        netbsd)  pkgin install doas ;;
-        openbsd) pkg_add doas ;;
+        alpine)  apk add doas             ;;
+        arch)    pacman -S doas           ;;
+        debian)  apt install doas         ;;
+        freebsd) pkg install doas         ;;
+        netbsd)  pkgin install doas       ;;
+        openbsd) pkg_add doas             ;;
         void)    xbps-install -S opendoas ;;
     esac
 }
@@ -75,13 +75,25 @@ configure_doas()
         *)       echo "${config}" > /etc/doas.conf ;;
     esac
 
-    ln -s "$(which doas)" /usr/bin/sudo
+    ln -sf "$(command -v doas)" /usr/bin/sudo
+}
+
+configure_mdo()
+{
+    printf "[<==] Configuring 'mdo'...\n"
+
+    config="uid=1001>uid=0,gid=*,+gid=*"
+
+    kldload mac_do
+    sysctl security.mac.do.enabled
+    sysctl security.mac.do.rules="$config"
+    echo 'mac_do_load="YES"' >> /boot/loader.conf
 }
 
 root_check()
 {
-    [ "$(id -u)" != "0" ] && {
-        printf "[!] This script must be run with root privileges.\n"
+    [ "$(id -u)" -ne 0 ] && {
+        printf "[!] This script must be run with root privileges.\n" >&2
         exit 1
     }
 }
@@ -90,15 +102,30 @@ main()
 {
     printf "[*] Starting 'sudo' replacement...\n"
 
-    printf "[==>] Enter your OS family [debian, arch, alpine, freebsd, openbsd, netbsd, void]: "
-    read -r os
+    printf "[==>] Enter your OS family [Debian, Arch, Alpine, Void, FreeBSD, OpenBSD, NetBSD]: "
+    read -r os; os=$(printf "%s" "$os" | tr '[:upper:]' '[:lower:]')
 
-    remove_sudo "${os}"
-    install_doas "${os}"
-    configure_doas "${os}"
+    if [ "$os" = "freebsd" ]; then
+        printf "[==>] FreeBSD supports 'mdo' via mac_do. Use it instead of 'doas'? [y/N]: "
+        read -r choice
+
+        case "$choice" in
+            [Yy]|[Yy][Ee][Ss])
+                remove_sudo "$os"
+                configure_mdo
+                printf "[*] Success! 'mdo' has been configured.\n"
+                return
+                ;;
+        esac
+    fi
+
+    remove_sudo "$os"
+    install_doas "$os"
+    configure_doas "$os"
 
     printf "[*] Success!\n"
 }
 
 root_check
 main
+
