@@ -18,16 +18,20 @@
 # in my contributions, and I affirm that I will not make contributions
 # that are otherwise encumbered.
 
-# Disable unicode.
-LC_ALL="C"
+#
+# Use the C locale for deterministic command output and parsing.
+#
 LANG="C"
+LC_ALL="C"
 
 sudo_to_ignore()
 {
     printf "[<==] Adding 'sudo' to ignored packages...\n"
-
+    
     mkdir -p /etc/xbps.d
-    if [ ! -e /etc/xbps.d/ignore.conf ] || ! grep -q "^ignorepkg=sudo" /etc/xbps.d/ignore.conf; then
+    if [ ! -e /etc/xbps.d/ignore.conf ] || \
+        ! grep -q "^ignorepkg=sudo" /etc/xbps.d/ignore.conf
+    then
         echo "ignorepkg=sudo" >> /etc/xbps.d/ignore.conf
     fi
 }
@@ -37,14 +41,16 @@ remove_sudo()
     printf "[<==] Removing 'sudo'...\n"
 
     case "$1" in
-        alpine)  apk del sudo                                     ;;
-        arch)    pacman -R sudo                                   ;;
-        debian)  apt remove sudo                                  ;;
-        freebsd) pkg remove sudo                                  ;;
-        netbsd)  pkgin remove sudo                                ;;
-        openbsd) pkg_delete sudo                                  ;;
-        void)    sudo_to_ignore && xbps-remove sudo               ;;
-        *)       printf "[!] Unsupported OS: '%s'\n" "$1"; exit 1 ;;
+        "alpine")  apk del sudo ;;
+        "arch")    pacman -R sudo ;;
+        "debian")  apt remove sudo ;;
+        "freebsd") pkg remove sudo ;;
+        "netbsd")  pkgin remove sudo ;;
+        "openbsd") pkg_delete sudo ;;
+        "void")    sudo_to_ignore && xbps-remove sudo ;;
+        *) 
+            printf "[!] Unsupported OS: '%s'.\n" "$1"
+            exit 1 ;;
     esac
 }
 
@@ -53,13 +59,16 @@ install_doas()
     printf "[<==] Installing 'doas'...\n"
 
     case "$1" in
-        alpine)  apk add doas             ;;
-        arch)    pacman -S doas           ;;
-        debian)  apt install doas         ;;
-        freebsd) pkg install doas         ;;
-        netbsd)  pkgin install doas       ;;
-        openbsd) pkg_add doas             ;;
-        void)    xbps-install -S opendoas ;;
+        "alpine")  apk add doas ;;
+        "arch")    pacman -S doas ;;
+        "debian")  apt install doas ;;
+        "freebsd") pkg install doas ;;
+        "netbsd")  pkgin install doas ;;
+        "openbsd") pkg_add doas ;;
+        "void")    xbps-install -S opendoas ;;
+        *)
+            printf "[!] Unsupported OS: '%s'.\n" "$1"
+            exit 1 ;;
     esac
 }
 
@@ -67,13 +76,12 @@ configure_doas()
 {
     printf "[<==] Configuring 'doas'...\n"
 
-    config="permit persist setenv {PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin} :wheel"
-
+    config="permit persist :wheel as root"
     case "$1" in
-        freebsd) echo "${config}" > /usr/local/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
-        netbsd)  echo "${config}" > /usr/pkg/etc/doas.conf || echo "${config}" > /etc/doas.conf ;;
-        *)       echo "${config}" > /etc/doas.conf ;;
+        "freebsd") echo "$config" > /usr/local/etc/doas.conf ;;
+        "netbsd")  echo "$config" > /usr/pkg/etc/doas.conf ;;
     esac
+    echo "$config" > /etc/doas.conf
 
     ln -sf "$(command -v doas)" /usr/bin/sudo
 }
@@ -83,7 +91,6 @@ configure_mdo()
     printf "[<==] Configuring 'mdo'...\n"
 
     config="uid=1001>uid=0,gid=*,+gid=*"
-
     kldload mac_do
     sysctl security.mac.do.enabled
     sysctl security.mac.do.rules="$config"
@@ -92,30 +99,35 @@ configure_mdo()
 
 root_check()
 {
-    [ "$(id -u)" -ne 0 ] && {
+    if [ "$(id -u)" -ne "0" ]
+    then
         printf "[!] This script must be run with root privileges.\n" >&2
         exit 1
-    }
+    fi
 }
 
 main()
 {
+    root_check
+
     printf "[*] Starting 'sudo' replacement...\n"
+    printf "[==>] Enter your OS family "
+    printf "[Debian, Arch, Alpine, Void, FreeBSD, OpenBSD, NetBSD]: "
+    
+    read -r os
+    os="$(printf "%s" "$os" | tr '[:upper:]' '[:lower:]')"
 
-    printf "[==>] Enter your OS family [Debian, Arch, Alpine, Void, FreeBSD, OpenBSD, NetBSD]: "
-    read -r os; os=$(printf "%s" "$os" | tr '[:upper:]' '[:lower:]')
-
-    if [ "$os" = "freebsd" ]; then
-        printf "[==>] FreeBSD supports 'mdo' via mac_do. Use it instead of 'doas'? [y/N]: "
+    if [ "$os" = "freebsd" ]
+    then
+        printf "[==>] FreeBSD supports 'mdo' via mac_do."
+        printf "Use it instead of 'doas'? [y/N]: "
         read -r choice
-
         case "$choice" in
             [Yy]|[Yy][Ee][Ss])
                 remove_sudo "$os"
                 configure_mdo
                 printf "[*] Success! 'mdo' has been configured.\n"
-                return
-                ;;
+                exit 0 ;;
         esac
     fi
 
@@ -123,9 +135,8 @@ main()
     install_doas "$os"
     configure_doas "$os"
 
-    printf "[*] Success!\n"
+    printf "[*] Success! 'doas' has been configured.\n"
 }
 
-root_check
 main
 

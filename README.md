@@ -21,7 +21,7 @@ It does just one thing — lets authorized users run commands as root
 
 You can install and run the script (as root) directly from GitHub:
 
-```sh
+```shell
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/Kinderfeld/replace-sudo/master/replace-sudo.sh)"
 ```
 
